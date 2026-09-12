@@ -143,20 +143,6 @@ Adding nomodeset to the kernel boot parameters bypasses early kernel display ini
 | **AsusMuxDgpu** | `supergfxctl -m Dedicated` | 15W–115W | Direct MUX routing, maximum frame rate consistency without desktop composition overhead. |
 | **Integrated** | `supergfxctl -m Integrated` | 0W (dGPU Powered Down) | Maximum battery life; completely disables the RTX 4060 on the PCI bus. |
 
-### 6.2 Running Applications on dGPU in Hybrid Mode
-
-To run high-performance applications or games on the RTX 4060 while keeping the desktop in Hybrid mode, use prime-run:
-
-```bash
-prime-run <application-name>
-```
-
-Example for Steam games (Set in Game Properties > Launch Options):
-
-```bash
-prime-run %command%
-```
-
 ## 7. Verification Commands Reference
 
 ---
