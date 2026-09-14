@@ -72,7 +72,7 @@ When switching to pure dGPU mode (AsusMuxDgpu), the physical hardware MUX switch
 
 ### 4.2 Permanent Fix: Disabling Early KMS via GRUB (Do this AFTER setting up Nvidia Drivers properly)
 
-Adding nomodeset to the kernel boot parameters bypasses early kernel display initialization, allowing GDM and the proprietary Nvidia driver to take control of the display directly upon boot.
+Adding nomodeset to the kernel boot parameters bypasses early kernel display initialization, allowing GDM and the proprietary Nvidia driver to take control of the display directly upon boot (**do this ONLY when you are planning to keep your laptop on dgpu only**). 
 
 1. Open the default GRUB configuration file:
 
