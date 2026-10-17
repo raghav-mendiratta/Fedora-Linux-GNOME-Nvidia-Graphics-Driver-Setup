@@ -61,34 +61,61 @@ Verify that the kernel module was successfully generated and matched to your act
 ```bash
 rpm -qa | grep kmod-nvidia
 ```
+## 4. Switching to Pure DGPU (AsusMuxDgpu)
 
-## 4. Fixing the Pure dGPU Black Screen / MUX Switch Freeze
+### 4.1 Root Cause Analysis
+When switching to pure dGPU mode (`AsusMuxDgpu`), the physical hardware MUX switch routes the display panel directly to the discrete NVIDIA RTX GPU, bypassing the Intel/AMD iGPU entirely. During boot, Plymouth (Fedora's graphical boot logo) attempts to initialize early display drivers via simple DRM/KMS before the NVIDIA proprietary driver takes full control of the bus. This handoff often fails, resulting in a blank black screen before GDM loads.
 
 ---
 
-### 4.1 Root Cause Analysis
+### 4.2 One-Time Step-by-Step dGPU Switch Workflow
 
-When switching to pure dGPU mode (AsusMuxDgpu), the physical hardware MUX switch routes the BOE display panel directly to the RTX 4060 (or whatever graphic card you have), bypassing the Intel/AMD iGPU. During boot, Plymouth (Fedora's graphical boot logo) attempts to initialize early display drivers via simple DRM/KMS before the Nvidia proprietary driver takes control of the bus. This handoff fails, causing a permanent blank screen freeze before GDM loads.
+To perform a single-session shift to `AsusMuxDgpu` and verify stability:
 
-### 4.2 Permanent Fix: Disabling Early KMS via GRUB (Do this AFTER setting up Nvidia Drivers properly)
+1. **Rebuild Kernel Modules:**
+   ```bash
+   sudo akmods --force --rebuild
+   ```
 
-Adding nomodeset to the kernel boot parameters bypasses early kernel display initialization, allowing GDM and the proprietary Nvidia driver to take control of the display directly upon boot (**do this ONLY when you are planning to keep your laptop on dgpu only**). 
+2. **Set GPU Mode via supergfxctl:**
+   ```bash
+   supergfxctl -m AsusMuxDgpu
+   ```
 
-1. Open the default GRUB configuration file:
+3. **Reboot the Laptop:**
+   ```bash
+   sudo reboot now
+   ```
 
+4. **Edit Boot Parameters in GRUB:**
+   - On the GRUB bootloader screen, highlight the main Fedora entry and press **`e`** to edit boot parameters.
+   - Locate the `GRUB_CMDLINE_LINUX` line (or the line starting with `linux` / `linux16`).
+   - Replace `rhgb quiet` with `nomodeset`.
+   - Press **`Ctrl` + `X`** (or **`F10`**) to boot into the desktop.
+
+> **Note:** The edits made directly in GRUB at startup are temporary. Upon the next reboot, GRUB will reset to its default configuration (`rhgb quiet`).
+
+---
+
+### 4.3 Permanent Fix: Disabling Early KMS via GRUB Config (**do this ONLY when you are planning to keep your laptop on dgpu only**). 
+
+To make `AsusMuxDgpu` mode boot reliably across every system startup without needing to edit GRUB manually every time:
+
+1. **Open the default GRUB configuration file:**
    ```bash
    sudo nano /etc/default/grub
    ```
 
-2. Locate the `GRUB_CMDLINE_LINUX` line and append nomodeset inside the quotes:
-
+2. **Modify the kernel command line:**
+   Locate `GRUB_CMDLINE_LINUX` and replace `rhgb quiet` with `nomodeset`:
    ```bash
-   GRUB_CMDLINE_LINUX="rhgb quiet nomodeset"
+   GRUB_CMDLINE_LINUX="nomodeset"
    ```
 
-3. Save and exit (Press Ctrl + X -> y -> Enter respectively).
-4. Regenerate the GRUB bootloader configuration:
+3. **Save and Exit:**
+   Press **`Ctrl` + `O`**, **`Enter`**, then **`Ctrl` + `X`**.
 
+4. **Regenerate the GRUB bootloader configuration:**
    ```bash
    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
    ```
@@ -97,14 +124,14 @@ Adding nomodeset to the kernel boot parameters bypasses early kernel display ini
 
 ---
 
-**Emergency Recovery:** If the system ever encounters a black screen during boot due to GPU mode changes or cache corruption, use this exact sequence to regain access without reinstalling.
+**Emergency Recovery:** If the system ever encounters a black screen during boot due to GPU mode changes (specially after AsusMuxDgpu switch) or cache corruption, use this exact sequence to regain access without reinstalling.
 
 ### Step-by-Step TTY Rescue Process:
 
 1. When stuck at a blank screen or boot menu, restart and highlight Fedora in GRUB.
 2. Press e to edit the boot parameters.
-3. Scroll down to the line beginning with linux or linux16.
-4. Move to the word rhgb quiet. Remove that word and replace it with this word:
+3. Locate variable name `GRUB_CMDLINE_LINUX` OR Scroll down to the line beginning with linux or linux16.
+4. Under that variable move to `rhgb quiet`. Remove `rhgb quite` and replace it with this:
 
    ```text
    3 nomodeset
@@ -112,28 +139,37 @@ Adding nomodeset to the kernel boot parameters bypasses early kernel display ini
 
 5. Press Ctrl + X or F10 to boot directly into text mode (TTY).
 6. Log in with your username and password.
-7. Force supergfxctl back to Hybrid mode:
+7. Force supergfxctl back to Hybrid Mode OR Integrated Mode:
 
    ```bash
    supergfxctl -m Hybrid
    sudo systemctl restart supergfxd
    ```
 
-8. Clear GNOME and Mutter session caches:
+   **OR**
+
+   ```bash
+   supergfxctl -m Integrated
+   sudo systemctl restart supergfxd
+   ```
+
+9. Clear GNOME and Mutter session caches:
 
    ```bash
    rm -rf ~/.cache/mutter ~/.cache/gnome-shell
    ```
 
-9. Reboot cleanly:
+10. Reboot cleanly:
 
    ```bash
-   sudo reboot
+   sudo reboot now
    ```
 
-## 6. GPU Mode Switching & Daily Operation
+## 6. GPU Mode Switching & Daily Operation 
 
 ---
+
+Note: Its better to use commands shown in 3.3 section first before switching GPU modes.
 
 ### 6.1 GPU Modes Comparison
 
