@@ -63,10 +63,11 @@ rpm -qa | grep kmod-nvidia
 ```
 ## 4. Switching to Pure DGPU (AsusMuxDgpu)
 
+---
+
 ### 4.1 Root Cause Analysis
 When switching to pure dGPU mode (`AsusMuxDgpu`), the physical hardware MUX switch routes the display panel directly to the discrete NVIDIA RTX GPU, bypassing the Intel/AMD iGPU entirely. During boot, Plymouth (Fedora's graphical boot logo) attempts to initialize early display drivers via simple DRM/KMS before the NVIDIA proprietary driver takes full control of the bus. This handoff often fails, resulting in a blank black screen before GDM loads.
 
----
 
 ### 4.2 One-Time Step-by-Step dGPU Switch Workflow
 
@@ -95,7 +96,6 @@ To perform a single-session shift to `AsusMuxDgpu` and verify stability:
 
 > **Note:** The edits made directly in GRUB at startup are temporary. Upon the next reboot, GRUB will reset to its default configuration (`rhgb quiet`).
 
----
 
 ### 4.3 Permanent Fix: Disabling Early KMS via GRUB Config (**do this ONLY when you are planning to keep your laptop on dgpu only**). 
 
