@@ -169,7 +169,7 @@ To make `AsusMuxDgpu` mode boot reliably across every system startup without nee
 
 ---
 
-Note: Its better to use commands shown in 3.3 section first before switching GPU modes.
+> **Note:** Its better to use commands shown in sub-section 3.3 first before switching GPU modes.
 
 ### 6.1 GPU Modes Comparison
 
